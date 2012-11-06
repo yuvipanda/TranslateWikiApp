@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">TranslateWiki</string>
+    <string name="api_path">https://translatewiki.net/w/api.php</string>
+    <string name="account_type_identifier">net.translatewiki.auth</string>
+    <string name="user_agent">TranslateWiki app for Android</string>
+    
+    <string name="title_activity_login">Sign in to TranslateWiki</string>
+    <string name="login_subtitle">Login to Translate!</string>
+</resources>
