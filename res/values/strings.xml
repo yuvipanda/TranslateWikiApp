@@ -6,4 +6,8 @@
     
     <string name="title_activity_login">Sign in to TranslateWiki</string>
     <string name="login_subtitle">Login to Translate!</string>
+    <string name="translated_text">Translated Text</string>
+    <string name="source_text">Source Text</string>
+    <string name="button_accept_translation">Correct</string>
+    <string name="button_reject_translation">Reject</string>
 </resources>
