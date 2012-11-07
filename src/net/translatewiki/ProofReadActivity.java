@@ -13,6 +13,7 @@ import com.actionbarsherlock.view.MenuItem;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
@@ -20,20 +21,20 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.*;
 
 public class ProofReadActivity extends AuthenticatedActivity implements OnSharedPreferenceChangeListener {
     
-    private TextView ebTranslatedText;
-    private TextView ebSourceText;
-    
     private String translateToken = null;
     
     private Message curMessage;
-    private ArrayList<Message> translations;
+    private MessageListAdaptor translations;
     private int curIndex;
-    private class FetchTranslationsTask extends AsyncTask<Void, Void, Boolean> {
+    private class FetchTranslationsTask extends AsyncTask<Void, Void, ArrayList<Message>> {
 
         private Activity context;
         private String lang;
@@ -45,10 +46,13 @@ public class ProofReadActivity extends AuthenticatedActivity implements OnShared
         }
         
         @Override
-        protected void onPostExecute(Boolean result) {
+        protected void onPostExecute(ArrayList<Message> result) {
             super.onPostExecute(result);
+            translations.clear();
+            for(Message m : result) {
+                translations.add(m);
+            }
             dialog.dismiss();
-            showMessage(translations.get(0));
         }
 
         @Override
@@ -60,8 +64,9 @@ public class ProofReadActivity extends AuthenticatedActivity implements OnShared
         }
 
         @Override
-        protected Boolean doInBackground(Void... params) {
+        protected ArrayList<Message> doInBackground(Void... params) {
             MWApi api = app.getApi();
+            ArrayList<Message> messagesList = new ArrayList<Message>();
             ApiResult result;
             try {
                 String userId = api.getUserID();
@@ -75,47 +80,48 @@ public class ProofReadActivity extends AuthenticatedActivity implements OnShared
                            .get();
             } catch (IOException e) {
                 e.printStackTrace();
-                return false;
+                return null;
             }
             ArrayList<ApiResult> messages = result.getNodes("/api/query/messagecollection/message");
             Log.d("TWN", "Actual result is" + Utils.getStringFromDOM(result.getDocument()));
             for(ApiResult message: messages) {
                 Message m = new Message(message.getString("@key"), lang, message.getString("@definition"), message.getString("@translation"), message.getString("@revision"));
-                if(!m.getRevision().equals("")) {
-                    translations.add(m);
-                }
+                messagesList.add(m);
             }
-            return true;
+            return messagesList;
         }
         
     }
     
-    private class ReviewTranslationTask extends AsyncTask<Message, Void, Boolean> {
+    private class ReviewTranslationTask extends AsyncTask<Void, Void, Boolean> {
 
         private Activity context;
         private ProgressDialog dialog;
+        private Message message;
         
-        public ReviewTranslationTask(Activity context) {
+        public ReviewTranslationTask(Activity context, Message message) {
             this.context = context;
+            this.message = message;
         }
         
         @Override
         protected void onPostExecute(Boolean result) {
             super.onPostExecute(result);
             dialog.dismiss();
-            showMessage(translations.get(++curIndex));
+            translations.remove(message);
         }
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
             dialog = new ProgressDialog(context);
-            dialog.setTitle("Loading!");
+            dialog.setTitle("Submitting!");
+            dialog.setMessage(message.getKey());
             dialog.show();
         }
         
         @Override
-        protected Boolean doInBackground(Message... params) {
+        protected Boolean doInBackground(Void... params) {
             try {
                 if(!app.getApi().validateLogin()) {
                     if(((TranslateWikiApp)app).revalidateAuthToken()) {
@@ -126,7 +132,6 @@ public class ProofReadActivity extends AuthenticatedActivity implements OnShared
                         throw new RuntimeException();
                     }
                 }
-                Message message = params[0];
                 if(translateToken == null) {
                     ApiResult tokenResult;
                     tokenResult = app.getApi().action("tokens").param("type", "translationreview").get();
@@ -148,31 +153,64 @@ public class ProofReadActivity extends AuthenticatedActivity implements OnShared
         
     }
     
+    private class MessageListAdaptor extends ArrayAdapter<Message> {
+
+        public MessageListAdaptor(Context context, int textViewResourceId) {
+            super(context, textViewResourceId);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View v = convertView;
+            if(v == null) {
+                v = getLayoutInflater().inflate(R.layout.listitem_translation, null);
+            }
+            
+            final Message m = this.getItem(position);
+            
+            TextView lblSourceText = (TextView) v.findViewById(R.id.lblSourceText);
+            TextView lblTranslatedText = (TextView) v.findViewById(R.id.lblTranslatedText);
+            Button btnReject = (Button) v.findViewById(R.id.btnReject); 
+            Button btnAccept = (Button) v.findViewById(R.id.btnAccept); 
+            
+            btnReject.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    translations.remove(m);
+                }
+            });
+           
+            btnAccept.setOnClickListener(new OnClickListener() {
+                
+                @Override
+                public void onClick(View v) {
+                    ReviewTranslationTask task = new ReviewTranslationTask(ProofReadActivity.this, m);
+                    Utils.executeAsyncTask(task);
+                }
+            });
+            
+            lblSourceText.setText(m.getDefinition());
+            lblTranslatedText.setText(m.getTranslation());
+            
+            return v;
+        }
+
+        
+    }
+    
     void showMessage(Message message) {
-        ebSourceText.setText(message.getDefinition());
-        ebTranslatedText.setText(message.getTranslation());
         curMessage = message;
     }
     
-    
-    public void accept_translation(View target) {
-       ReviewTranslationTask task = new ReviewTranslationTask(this);
-       Utils.executeAsyncTask(task, curMessage);
-    }
-    
-    public void reject_translation(View target) {
-       showMessage(translations.get(++curIndex)); 
-    }
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_proofread);
         
-        ebSourceText = (TextView)findViewById(R.id.ebSourceTExt);
-        ebTranslatedText = (TextView)findViewById(R.id.ebTranslatedText);
-        
-        translations = new ArrayList<Message>();
+        translations = new MessageListAdaptor(this, 0);
+        ListView listView = (ListView) findViewById(R.id.listTranslations);
+        listView.setAdapter(translations);
         requestAuthToken();
     }
     
@@ -198,7 +236,7 @@ public class ProofReadActivity extends AuthenticatedActivity implements OnShared
         translations.clear();
         String lang = PreferenceManager.getDefaultSharedPreferences(this).getString("language", "en");
         FetchTranslationsTask fetchTranslations = new FetchTranslationsTask(this, lang);
-        Utils.executeAsyncTask(fetchTranslations);
+        fetchTranslations.execute();
     }
     
     @Override

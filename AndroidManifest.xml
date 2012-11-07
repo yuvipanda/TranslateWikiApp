@@ -17,6 +17,7 @@
         android:name=".TranslateWikiApp"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
+        android:hardwareAccelerated="true"
         android:theme="@style/AppTheme" >
         <activity
             android:name="org.mediawiki.auth.LoginActivity"

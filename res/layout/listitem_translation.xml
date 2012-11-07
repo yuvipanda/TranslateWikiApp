@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="32dp"
+    android:background="@drawable/message_display" >
+
+    <TextView
+        android:id="@+id/lblSourceText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:gravity="center_horizontal"
+        android:padding="8dip"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <ImageView
+        android:id="@+id/dividerSourceTranslate"
+        android:layout_width="fill_parent"
+        android:layout_height="2dp"
+        android:paddingBottom="2dp"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:paddingTop="2dp"
+        android:scaleType="fitXY"
+        android:layout_below="@id/lblSourceText"
+        android:src="@android:drawable/divider_horizontal_bright" />
+
+    <TextView
+        android:id="@+id/lblTranslatedText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/dividerSourceTranslate"
+        android:gravity="center_horizontal"
+        android:padding="8dip"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/dividerContentButtons"
+        android:layout_width="fill_parent"
+        android:layout_height="2dp"
+        android:paddingBottom="2dp"
+        android:paddingTop="2dp"
+        android:scaleType="fitXY"
+        android:layout_below="@id/lblTranslatedText"
+        android:src="@android:drawable/divider_horizontal_bright" />
+    
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/dividerContentButtons" >
+
+        <Button
+            android:id="@+id/btnAccept"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:gravity="center"
+            android:text="@string/button_accept_translation" />
+
+        <Button
+            android:id="@+id/btnReject"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:gravity="center"
+            android:text="@string/button_reject_translation" />
+    </LinearLayout>
+
+</RelativeLayout>
