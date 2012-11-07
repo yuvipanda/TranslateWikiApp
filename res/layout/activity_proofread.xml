@@ -6,6 +6,7 @@
     android:animateLayoutChanges="true"
     android:divider="@android:color/transparent"
     android:dividerHeight="12.0dp"
+    android:background="#f8f8f8"
     android:layout_margin="12dp" >
 
 </ListView>

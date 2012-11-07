@@ -15,7 +15,8 @@
         android:layout_centerHorizontal="true"
         android:gravity="center_horizontal"
         android:padding="8dip"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textColor="#565656" />
 
     <ImageView
         android:id="@+id/dividerSourceTranslate"
@@ -39,6 +40,7 @@
         android:gravity="center_horizontal"
         android:padding="8dip"
         android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textColor="#252525"
         android:textStyle="bold" />
 
     <ImageView
