@@ -8,15 +8,22 @@ import org.mediawiki.api.MWApi;
 import org.mediawiki.auth.AuthenticatedActivity;
 import org.mediawiki.auth.Utils;
 
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuItem;
+
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.*;
 
-public class ProofReadActivity extends AuthenticatedActivity {
+public class ProofReadActivity extends AuthenticatedActivity implements OnSharedPreferenceChangeListener {
     
     private TextView ebTranslatedText;
     private TextView ebSourceText;
@@ -29,10 +36,12 @@ public class ProofReadActivity extends AuthenticatedActivity {
     private class FetchTranslationsTask extends AsyncTask<Void, Void, Boolean> {
 
         private Activity context;
+        private String lang;
         private ProgressDialog dialog;
       
-        public FetchTranslationsTask(Activity context) {
+        public FetchTranslationsTask(Activity context, String lang) {
             this.context = context;
+            this.lang = lang;
         }
         
         @Override
@@ -59,8 +68,8 @@ public class ProofReadActivity extends AuthenticatedActivity {
                result = api.action("query")
                            .param("list", "messagecollection")
                            .param("mcgroup", "core")
-                           .param("mclanguage", "ml")
-                           .param("mclimit", "100")
+                           .param("mclanguage", lang)
+                           .param("mclimit", "10")
                            .param("mcprop", "definition|translation|revision")
                            .param("mcfilter", "!last-translator:" + userId + "|!reviewer:" + userId + "|!ignored|translated" )
                            .get();
@@ -71,7 +80,7 @@ public class ProofReadActivity extends AuthenticatedActivity {
             ArrayList<ApiResult> messages = result.getNodes("/api/query/messagecollection/message");
             Log.d("TWN", "Actual result is" + Utils.getStringFromDOM(result.getDocument()));
             for(ApiResult message: messages) {
-                Message m = new Message(message.getString("@key"), "ta", message.getString("@definition"), message.getString("@translation"), message.getString("@revision"));
+                Message m = new Message(message.getString("@key"), lang, message.getString("@definition"), message.getString("@translation"), message.getString("@revision"));
                 if(!m.getRevision().equals("")) {
                     translations.add(m);
                 }
@@ -166,23 +175,52 @@ public class ProofReadActivity extends AuthenticatedActivity {
         translations = new ArrayList<Message>();
         requestAuthToken();
     }
+    
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+       com.actionbarsherlock.view.MenuInflater inflater = getSupportMenuInflater();
+       inflater.inflate(R.menu.proofread_menu, (com.actionbarsherlock.view.Menu) menu);
+       return super.onCreateOptionsMenu(menu);
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+        case R.id.menu_settings:
+            Intent i = new Intent(this, PreferenceActivity.class);
+            startActivity(i);
+            return true;
+        }
+        return false;
+    }
 
+    private void refreshTranslations() {
+        translations.clear();
+        String lang = PreferenceManager.getDefaultSharedPreferences(this).getString("language", "en");
+        FetchTranslationsTask fetchTranslations = new FetchTranslationsTask(this, lang);
+        Utils.executeAsyncTask(fetchTranslations);
+    }
+    
     @Override
     protected void onAuthCookieAcquired(String authCookie) {
         super.onAuthCookieAcquired(authCookie);
         app.getApi().setAuthCookie(authCookie);
-        Log.d("TWN", "AUTH COOKIE ACQUIRED PEOPLE!" + app.getApi().getAuthCookie());
-        FetchTranslationsTask fetchTranslations = new FetchTranslationsTask(this);
-        Utils.executeAsyncTask(fetchTranslations);
+        refreshTranslations();
+        PreferenceManager.getDefaultSharedPreferences(this).registerOnSharedPreferenceChangeListener(this);
     }
 
     @Override
     protected void onAuthFailure() {
         super.onAuthFailure();
-        super.onAuthFailure();
         Toast failureToast = Toast.makeText(this, R.string.authentication_failed, Toast.LENGTH_LONG);
         failureToast.show();
         finish();
+    }
+
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        refreshTranslations();
     }
     
 }

@@ -10,4 +10,7 @@
     <string name="source_text">Source Text</string>
     <string name="button_accept_translation">Correct</string>
     <string name="button_reject_translation">Reject</string>
+    <string name="language_preference">Language</string>
+    <string name="settings_menu">Settings</string>
+    <string name="settings_title">Settings</string>
 </resources>
