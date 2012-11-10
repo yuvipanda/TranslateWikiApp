@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" xmlns:android="http://schemas.android.com/apk/res/android">
 <ListView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/listTranslations"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:animateLayoutChanges="true"
     android:divider="@android:color/transparent"
     android:dividerHeight="12.0dp"
     android:background="#f8f8f8"
-    android:layout_margin="12dp" >
+    android:layout_margin="12dp" 
+    >
 
 </ListView>
+
+</RelativeLayout>
