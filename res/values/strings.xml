@@ -11,6 +11,7 @@
     <string name="button_accept_translation">Correct</string>
     <string name="button_reject_translation">Reject</string>
     <string name="language_preference">Language</string>
+    <string name="message_group_preference">Message Group</string>
     <string name="settings_menu">Settings</string>
     <string name="settings_title">Settings</string>
 </resources>

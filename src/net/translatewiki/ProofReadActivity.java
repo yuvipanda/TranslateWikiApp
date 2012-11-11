@@ -37,6 +37,7 @@ public class ProofReadActivity extends AuthenticatedActivity implements OnShared
     final Context context = this;
     private int offsetCounter = 0;
     Button moreButton;
+    String groupPreference;
     private class FetchTranslationsTask extends AsyncTask<Void, Void, ArrayList<Message>> {
 
         private Activity context;
@@ -63,7 +64,7 @@ public class ProofReadActivity extends AuthenticatedActivity implements OnShared
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            moreButton.setVisibility(View.INVISIBLE);
+            moreButton.setVisibility(View.GONE);
             dialog = new ProgressDialog(context);
             dialog.setTitle("Loading!");
             dialog.show();
@@ -78,7 +79,7 @@ public class ProofReadActivity extends AuthenticatedActivity implements OnShared
                 String userId = api.getUserID();
                result = api.action("query")
                            .param("list", "messagecollection")
-                           .param("mcgroup", "core")
+                           .param("mcgroup", groupPreference )
                            .param("mclanguage", lang)
                            .param("mclimit", "10")
                            .param("mcoffset",Integer.valueOf(offsetCounter).toString())
@@ -230,7 +231,7 @@ public class ProofReadActivity extends AuthenticatedActivity implements OnShared
             	
             }
         });
-        moreButton.setVisibility(View.INVISIBLE);
+        moreButton.setVisibility(View.GONE);
         listView.setAdapter(translations);
         
         requestAuthToken();
@@ -261,6 +262,8 @@ public class ProofReadActivity extends AuthenticatedActivity implements OnShared
     private void refreshTranslations() {
         //translations.clear();
         String lang = PreferenceManager.getDefaultSharedPreferences(this).getString("language", "en");
+        groupPreference = PreferenceManager.getDefaultSharedPreferences(context).getString("group", "core");
+        Log.d("TWG", "Reading : " + groupPreference);
         FetchTranslationsTask fetchTranslations = new FetchTranslationsTask(this, lang);
         fetchTranslations.execute();
     }
@@ -284,7 +287,8 @@ public class ProofReadActivity extends AuthenticatedActivity implements OnShared
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        refreshTranslations();
+        translations.clear();
+    	refreshTranslations();
     }
     
 }
