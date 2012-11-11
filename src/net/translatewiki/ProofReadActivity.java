@@ -34,11 +34,16 @@ public class ProofReadActivity extends AuthenticatedActivity implements OnShared
     private Message curMessage;
     private MessageListAdaptor translations;
     private int curIndex;
+    final Context context = this;
+    private int offsetCounter = 0;
+    Button moreButton;
+    String groupPreference;
     private class FetchTranslationsTask extends AsyncTask<Void, Void, ArrayList<Message>> {
 
         private Activity context;
         private String lang;
         private ProgressDialog dialog;
+        
       
         public FetchTranslationsTask(Activity context, String lang) {
             this.context = context;
@@ -48,16 +53,18 @@ public class ProofReadActivity extends AuthenticatedActivity implements OnShared
         @Override
         protected void onPostExecute(ArrayList<Message> result) {
             super.onPostExecute(result);
-            translations.clear();
+            //translations.clear(); 
             for(Message m : result) {
                 translations.add(m);
             }
             dialog.dismiss();
+            moreButton.setVisibility(View.VISIBLE);
         }
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
+            moreButton.setVisibility(View.GONE);
             dialog = new ProgressDialog(context);
             dialog.setTitle("Loading!");
             dialog.show();
@@ -72,9 +79,10 @@ public class ProofReadActivity extends AuthenticatedActivity implements OnShared
                 String userId = api.getUserID();
                result = api.action("query")
                            .param("list", "messagecollection")
-                           .param("mcgroup", "core")
+                           .param("mcgroup", groupPreference )
                            .param("mclanguage", lang)
                            .param("mclimit", "10")
+                           .param("mcoffset",Integer.valueOf(offsetCounter).toString())
                            .param("mcprop", "definition|translation|revision")
                            .param("mcfilter", "!last-translator:" + userId + "|!reviewer:" + userId + "|!ignored|translated" )
                            .get();
@@ -210,7 +218,22 @@ public class ProofReadActivity extends AuthenticatedActivity implements OnShared
         
         translations = new MessageListAdaptor(this, 0);
         ListView listView = (ListView) findViewById(R.id.listTranslations);
+        View footerView = ((LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.more_button_footer, null, false);
+        listView.addFooterView(footerView);
+
+        moreButton = (Button)findViewById(R.id.buttonMore);
+        moreButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                // Perform action on click
+            	offsetCounter += 10;
+            	Toast.makeText(context, "Getting mo for ya...", Toast.LENGTH_LONG).show();
+            	refreshTranslations();
+            	
+            }
+        });
+        moreButton.setVisibility(View.GONE);
         listView.setAdapter(translations);
+        
         requestAuthToken();
     }
     
@@ -232,9 +255,15 @@ public class ProofReadActivity extends AuthenticatedActivity implements OnShared
         return false;
     }
 
+    void onGetMore()
+    {
+    	Toast.makeText(context, "Getting more..", Toast.LENGTH_LONG).show();
+    }
     private void refreshTranslations() {
-        translations.clear();
+        //translations.clear();
         String lang = PreferenceManager.getDefaultSharedPreferences(this).getString("language", "en");
+        groupPreference = PreferenceManager.getDefaultSharedPreferences(context).getString("group", "core");
+        Log.d("TWG", "Reading : " + groupPreference);
         FetchTranslationsTask fetchTranslations = new FetchTranslationsTask(this, lang);
         fetchTranslations.execute();
     }
@@ -258,7 +287,8 @@ public class ProofReadActivity extends AuthenticatedActivity implements OnShared
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        refreshTranslations();
+        translations.clear();
+    	refreshTranslations();
     }
     
 }

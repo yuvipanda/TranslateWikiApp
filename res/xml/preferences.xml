@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
     <EditTextPreference android:key="language" android:title="@string/language_preference" android:defaultValue="en"/>
+    <PreferenceScreen
+        android:key="msgGroupPref"
+        android:title="@string/message_group_preference"
+        android:persistent="false"
+        >
+        
+
+</PreferenceScreen>
 </PreferenceScreen>

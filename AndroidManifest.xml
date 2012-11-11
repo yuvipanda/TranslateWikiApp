@@ -53,6 +53,7 @@
                 android:name="android.accounts.AccountAuthenticator"
                 android:resource="@xml/authenticator" />
         </service>
+        <activity android:name="MessageGroupGetterActivity"></activity>
     </application>
 
 </manifest>
